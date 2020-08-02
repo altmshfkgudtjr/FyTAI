@@ -191,7 +191,10 @@ def Crawler(url, channel_hash):
 		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Video scrapping faild. Some problems may have occurred.\n")
 
 	# Quit Chrome driver
-	chrome.quit()
+	try:
+		chrome.quit()
+	except:
+		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Chrome Driver1 is already closed!\n")
 
 	# 양식 소멸자 호출
 	del model

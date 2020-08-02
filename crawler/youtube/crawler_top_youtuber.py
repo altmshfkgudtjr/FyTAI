@@ -65,7 +65,10 @@ def Crawler():
 		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Top channel scrapping faild. Some problems may have occurred.\n")
 
 	# Quit Crhome driver
-	chrome.quit()
+	try:
+		chrome.quit()
+	except:
+		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Chrome Driver1 is already closed!\n")
 
 	# 크롤러 소멸자 호출
 	del crawler
