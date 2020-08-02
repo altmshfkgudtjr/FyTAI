@@ -6,6 +6,9 @@ import time
 from crawler.init_crawler import init_crawler
 
 def Crawler():
+	# 반환될 output 리스트 선언
+	link_list = []
+
 	try:
 		# 크롤러 생성자 호출
 		crawler = init_crawler("https://kr.noxinfluencer.com/")
@@ -22,9 +25,6 @@ def Crawler():
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-science%20%26%20technology-youtuber-sorted-by-subs-weekly',
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-comedy-youtuber-sorted-by-subs-weekly'
 		]
-
-		# 반환될 output 리스트 선언
-		link_list = []
 
 		# Get Chrome driver
 		chrome = crawler.get_chrome()
@@ -71,6 +71,9 @@ def Crawler():
 		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Chrome Driver1 is already closed!\n")
 
 	# 크롤러 소멸자 호출
-	del crawler
+	try:
+		del crawler
+	except:
+		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Crawler is already closed!\n")
 
 	return link_list

@@ -12,7 +12,7 @@ class init_crawler:
 		self.page_num = 1
 		self.target = ''
 
-		# DB Clientz
+		# DB Client
 		(self.db, self.client) = mongo()
 
 	# db Cursor 반환
@@ -57,4 +57,7 @@ class init_crawler:
 
 	# db connection 해제
 	def __del__(self):
-		self.client.close()
+		try:
+			self.client.close()
+		except:
+			print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: DB cursor is not opened!\n")

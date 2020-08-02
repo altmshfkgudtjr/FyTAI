@@ -210,10 +210,16 @@ def Crawler(url):
 	except:
 		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Chrome Driver1 is already closed!\n")
 
-	# 양식 소멸자 호출
-	del model
 	# 크롤러 소멸자 호출
-	del crawler
+	try:
+		del model
+	except:
+		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Channel Model is already closed!\n")
+	# 크롤러 소멸자 호출
+	try:
+		del crawler
+	except:
+		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Crawler is already closed!\n")
 
 	# 비디오 링크 리스트 반환
 	return (video_list, channel_hash)
