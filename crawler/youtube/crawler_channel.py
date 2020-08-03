@@ -12,6 +12,9 @@ from model.channel import channel
 from module.connection import FyTAI__channel
 
 def Crawler(url):
+	video_list = []
+	channel_hash = ''
+
 	try:
 		# URL 마지막 문자가 '/'이 아니게 정제
 		while url[len(url)-1] == '/':
@@ -25,6 +28,8 @@ def Crawler(url):
 		# Get Chrome driver 1
 		chrome = crawler.get_chrome()
 
+		print(url+'/about', " :::: START!")
+
 		# 채널 정보 수집
 		chrome.get(url+'/about')
 		WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#right-column")))
@@ -37,7 +42,10 @@ def Crawler(url):
 		model.info = bs.select('yt-formatted-string#description')[0].get_text(" ", strip = True)
 		model.info = post_wash(model.info)
 		model.date = bs.select('div#right-column > yt-formatted-string > span')[1].get_text(" ", strip = True)
-		model.date = datetime.strptime(model.date, "%Y. %m. %d.")
+		try:
+			model.date = datetime.strptime(model.date, "%Y. %m. %d.")
+		except:
+			model.date = datetime.strptime(model.date, "%b %d, %Y")
 		model.view = bs.select('div#right-column > yt-formatted-string')[2].get_text(" ", strip = True).replace(',', '')[4:-1]
 		model.view = int(model.view)
 		model.subscribe = bs.select('yt-formatted-string#subscriber-count')[0].get_text(" ", strip = True)[4:-1]
@@ -54,95 +62,99 @@ def Crawler(url):
 
 		# 채널 내 커뮤니티 정보 수집
 		chrome.get(url+'/community')
-		WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#contents > ytd-backstage-post-thread-renderer")))
+		try:
+			WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#contents > ytd-backstage-post-thread-renderer")))
 
-		# 채널 내 커뮤니티 정보 수집을 위한 Chromedriver 2
-		chrome2 = crawler.get_chrome()
+			# 채널 내 커뮤니티 정보 수집을 위한 Chromedriver 2
+			chrome2 = crawler.get_chrome()
 
-		# 커뮤니티 포스트 페이지네이션을 위한 기억값
-		before_posts_cnt = 0
-		now_posts_cnt = 0
+			# 커뮤니티 포스트 페이지네이션을 위한 기억값
+			before_posts_cnt = 0
+			now_posts_cnt = 0
 
-		while 1:
-			print("[END] Key Down. :::: Community")
-			chrome.find_element_by_tag_name("body").send_keys(Keys.END)
-			# 3초동안 명시적 대기
-			time.sleep(3)
+			while 1:
+				print("[END] Key Down. :::: Community")
+				chrome.find_element_by_tag_name("body").send_keys(Keys.END)
+				# 3초동안 명시적 대기
+				time.sleep(3)
 
-			html = chrome.page_source
-			bs = crawler.bs4(html)
+				html = chrome.page_source
+				bs = crawler.bs4(html)
 
-			posts = bs.select('#contents > ytd-backstage-post-thread-renderer')
-			# 현재 포스트 갯수 갱신
-			now_posts_cnt = len(posts)
+				posts = bs.select('#contents > ytd-backstage-post-thread-renderer')
+				# 현재 포스트 갯수 갱신
+				now_posts_cnt = len(posts)
 
-			# 새롭게 수집한 포스트 수가 이전 댓글 수랑 같으면 중지
-			if before_posts_cnt == now_posts_cnt:
-				break
+				# 새롭게 수집한 포스트 수가 이전 댓글 수랑 같으면 중지
+				if before_posts_cnt == now_posts_cnt:
+					break
 
-			# 이전 포스트개수를 제외한 나머지 정보 수집
-			for post in posts[before_posts_cnt:]:
-				post_url = post.find('a', {"class": "yt-simple-endpoint style-scope ytd-button-renderer"})['href']
-				chrome2.get(crawler.get_domain() + post_url)
-				WebDriverWait(chrome2, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#content.style-scope ytd-expander")))
-
-				html2 = chrome2.page_source
-				bs2 = crawler.bs4(html2)
-
-				post_form = {}
-				post_form['content'] = bs2.select('#content.style-scope ytd-expander')[0].get_text(" ", strip = True)
-				post_form['content'] = post_wash(post_form['content'])
-				post_form['date'] = bs2.select('#published-time-text')[0].get_text(" ", strip = True)
-				post_form['date'] = str2num_date(post_form['date'])
-				post_form['like'] = bs2.find('span', {'id': 'vote-count-middle'}).get_text(" ", strip = True)
-				post_form['like'] = str2num_counter(post_form['like'])
-				post_form['like'] = post_form['like'] == '' and -1 or post_form['like']
-				post_form['comments'] = []
-
-				# 포스트 내 댓글 페이지네이션을 위한 기억값
-				before_comments_cnt = 0
-				now_comments_cnt = 0
-
-				while 1:
-					print("[END] Key Down. :::: Community - Comments")
-					chrome2.find_element_by_tag_name("body").send_keys(Keys.END)
-					# 3초동안 명시적 대기
-					time.sleep(3)
+				# 이전 포스트개수를 제외한 나머지 정보 수집
+				for post in posts[before_posts_cnt:]:
+					post_url = post.find('a', {"class": "yt-simple-endpoint style-scope ytd-button-renderer"})['href']
+					chrome2.get(crawler.get_domain() + post_url)
+					WebDriverWait(chrome2, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#content.style-scope ytd-expander")))
 
 					html2 = chrome2.page_source
 					bs2 = crawler.bs4(html2)
-					
-					if len(bs2.select('div#contents')) < 3:
-						break
 
-					comments = bs2.select('div#contents')[2].select('ytd-comment-thread-renderer')
-					now_comments_cnt = len(comments)
+					post_form = {}
+					post_form['content'] = bs2.select('#content.style-scope ytd-expander')[0].get_text(" ", strip = True)
+					post_form['content'] = post_wash(post_form['content'])
+					post_form['date'] = bs2.select('#published-time-text')[0].get_text(" ", strip = True)
+					post_form['date'] = str2num_date(post_form['date'])
+					post_form['like'] = bs2.find('span', {'id': 'vote-count-middle'}).get_text(" ", strip = True)
+					post_form['like'] = str2num_counter(post_form['like'])
+					post_form['like'] = post_form['like'] == '' and -1 or post_form['like']
+					post_form['comments'] = []
 
-					# 새롭게 수집한 댓글 수가 이전 댓글 수랑 같으면 중지
-					if before_comments_cnt == now_comments_cnt:
-						break
+					# 포스트 내 댓글 페이지네이션을 위한 기억값
+					before_comments_cnt = 0
+					now_comments_cnt = 0
 
-					# 이전 댓글 갯수를 제외한 나머지 정보 수집
-					for comment in comments[before_comments_cnt:]:
-						comment_form = {}
-						comment_form['content'] = comment.select('#expander #content')[0].get_text(" ", strip = True)
-						comment_form['content'] = post_wash(comment_form['content'])
-						comment_form['date'] = comment.select('#header-author > yt-formatted-string')[0].get_text(" ", strip = True)
-						comment_form['date'] = str2num_date(comment_form['date'])
-						comment_form['like'] = comment.select('#vote-count-middle')[0].get_text(" ", strip = True)
-						comment_form['like'] = str2num_counter(comment_form['like'])
-						comment_form['like'] = comment_form['like'] == '' and -1 or comment_form['like']
-						post_form['comments'].append(comment_form)
+					while 1:
+						print("[END] Key Down. :::: Community - Comments")
+						chrome2.find_element_by_tag_name("body").send_keys(Keys.END)
+						# 3초동안 명시적 대기
+						time.sleep(3)
 
-					# 이전 댓글 갯수 갱신
-					before_comments_cnt = now_comments_cnt
+						html2 = chrome2.page_source
+						bs2 = crawler.bs4(html2)
+						
+						if len(bs2.select('div#contents')) < 3:
+							break
 
-				print("[POST]", post_form['content'][:20]+'...',' :::: 댓글 수:',len(post_form['comments']))
+						comments = bs2.select('div#contents')[2].select('ytd-comment-thread-renderer')
+						now_comments_cnt = len(comments)
 
-				model.posts.append(post_form)
+						# 새롭게 수집한 댓글 수가 이전 댓글 수랑 같으면 중지
+						if before_comments_cnt == now_comments_cnt:
+							break
 
-			# 이전 포스트 갯수 갱신
-			before_posts_cnt = now_posts_cnt
+						# 이전 댓글 갯수를 제외한 나머지 정보 수집
+						for comment in comments[before_comments_cnt:]:
+							comment_form = {}
+							comment_form['content'] = comment.select('#expander #content')[0].get_text(" ", strip = True)
+							comment_form['content'] = post_wash(comment_form['content'])
+							comment_form['date'] = comment.select('#header-author > yt-formatted-string')[0].get_text(" ", strip = True)
+							comment_form['date'] = str2num_date(comment_form['date'])
+							comment_form['like'] = comment.select('#vote-count-middle')[0].get_text(" ", strip = True)
+							comment_form['like'] = str2num_counter(comment_form['like'])
+							comment_form['like'] = comment_form['like'] == '' and -1 or comment_form['like']
+							post_form['comments'].append(comment_form)
+
+						# 이전 댓글 갯수 갱신
+						before_comments_cnt = now_comments_cnt
+
+					print("[POST]", post_form['content'][:20]+'...',' :::: 댓글 수:',len(post_form['comments']))
+
+					model.posts.append(post_form)
+
+				# 이전 포스트 갯수 갱신
+				before_posts_cnt = now_posts_cnt
+
+		except:
+			print("[INFO] 커뮤니티가 존재하지 않습니다.")
 
 		# 데이베이스 삽입
 		# [ 이미 존재하면 Update, 존재하지 않으면 Insert ]
@@ -151,14 +163,15 @@ def Crawler(url):
 		else:
 			FyTAI__channel(crawler.get_db()).update__one(model.get_data())
 
-		# Quit Chrome driver 2	
-		chrome2.quit()
-
+		# Quit Chrome driver 2
+		try:
+			chrome2.quit()
+		except:
+			print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Chrome Driver2 is already closed!\n")
+	
 		# 채널 동영상 리스트 수집
 		chrome.get(url+'/videos?view=0&sort=dd&shelf_id=0')
 		WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "ytd-grid-video-renderer.style-scope")))
-
-		video_list = []
 
 		# 영상 페이지네이션을 위한 기억값
 		before_videos_cnt = 0
@@ -193,7 +206,7 @@ def Crawler(url):
 		print("-"*50,"\n")
 
 		channel_hash = model.hash
-		# 채널 식별값 반환하기위한 변수 할당
+	# 채널 식별값 반환하기위한 변수 할당
 
 	except:
 		print("\n",'\x1b[6;37;41m' + '[WARNING]' + '\x1b[0m'," :::: Channel URL is not verified. Or, other problems may have occurred.\n")

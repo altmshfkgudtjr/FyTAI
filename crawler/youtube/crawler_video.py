@@ -60,7 +60,10 @@ def Crawler(url, channel_hash):
 		model.date = bs.select('#date yt-formatted-string')[0].get_text(" ", strip=True)
 		if model.date.find("실시간 스트리밍") != -1:
 			model.date = model.date.split(':')[1:]
-		model.date = datetime.strptime(model.date, "%Y. %m. %d.")
+		try:
+			model.date = datetime.strptime(model.date, "%Y. %m. %d.")
+		except:
+			model.date = datetime.strptime(model.date, "%b %d, %Y")
 		model.hash = url.split('?v=')[1]
 
 		print("\n","-"*50)

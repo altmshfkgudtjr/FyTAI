@@ -15,15 +15,15 @@ def Crawler():
 
 		# 크롤링 url 추가
 		crawler.url_list = [
+			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-science%20%26%20technology-youtuber-sorted-by-subs-weekly',
+			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-people%20%26%20blogs-youtuber-sorted-by-subs-weekly',
+			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-comedy-youtuber-sorted-by-subs-weekly'
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-gaming-youtuber-sorted-by-subs-weekly',
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-autos%20%26%20vehicles-youtuber-sorted-by-subs-weekly',
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-pets%20%26%20animals-youtuber-sorted-by-subs-weekly',
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-sports-youtuber-sorted-by-subs-weekly',
-			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-people%20%26%20blogs-youtuber-sorted-by-subs-weekly',
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-news%20%26%20politics-youtuber-sorted-by-subs-weekly',
 			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-howto%20%26%20style-youtuber-sorted-by-subs-weekly',
-			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-science%20%26%20technology-youtuber-sorted-by-subs-weekly',
-			'https://kr.noxinfluencer.com/youtube-channel-rank/top-200-kr-comedy-youtuber-sorted-by-subs-weekly'
 		]
 
 		# Get Chrome driver
@@ -39,8 +39,8 @@ def Crawler():
 			while chrome.find_element_by_class_name("end-mark-wrap").value_of_css_property("display") != 'block':
 				print("[END] Key Down. :::: Top Chart")
 				chrome.find_element_by_tag_name("body").send_keys(Keys.END)
-				# 2초동안 명시적 대기
-				time.sleep(2)
+				# 3초동안 명시적 대기
+				time.sleep(3)
 
 			# 해당 페이지 Parse
 			html = chrome.page_source
